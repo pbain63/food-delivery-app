@@ -1,6 +1,6 @@
 // server/middleware/auth.js
 const jwt = require("jsonwebtoken");
-
+// authenticateToken — verifies user is logged in
 function authenticateToken(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -15,7 +15,7 @@ function authenticateToken(req, res, next) {
     return res.status(403).json({ error: "Invalid token" });
   }
 }
-
+// authorizeRoles— restricts access by user role
 function authorizeRoles(...allowedRoles) {
   return (req, res, next) => {
     if (!allowedRoles.includes(req.user.role)) {
