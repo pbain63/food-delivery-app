@@ -1,13 +1,14 @@
 import { useState } from "react";
 
-function AddMealForm() {
+function AddMealForm({ setMeals }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [type, setType] = useState("lunch");
   const [message, setMessage] = useState("");
 
-  const token = "YOUR_JWT_TOKEN"; // Replace with your actual token temporarily
+  const token =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6InByb3ZpZGVyIiwiaWF0IjoxNzQ5ODg0MjY0fQ.9gdJrrLSoi1-hrfDb1srJynILs6ZX2oEuEdnqTYr0Ps"; // Replace with your actual token temporarily
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,6 +25,10 @@ function AddMealForm() {
       const data = await res.json();
       if (res.ok) {
         setMessage("Meal added successfully!");
+
+        // Add the new meal to the top of the meals list
+        setMeals((prevMeals) => [data.meal, ...prevMeals]);
+
         setTitle("");
         setDescription("");
         setPrice("");
