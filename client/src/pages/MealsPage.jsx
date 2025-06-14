@@ -1,42 +1,30 @@
+// client/src/pages/MealsPage.jsx
 import { useEffect, useState } from "react";
-// import axios from "axios";
+import MealCard from "../components/MealCard";
 
-const MealsPage = () => {
+function MealsPage() {
   const [meals, setMeals] = useState([]);
   const [error, setError] = useState("");
 
-  const token = "your_jwt_token_here";
-
   useEffect(() => {
-    fetch("/api/meals", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-        setMeals(data.meals);
+    fetch("/api/meals")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load meals");
+        return res.json();
       })
-      .catch((err) => {
-        console.error(err);
-        setError("Failed to load meals");
-      });
+      .then((data) => setMeals(data.meals))
+      .catch((err) => setError(err.message));
   }, []);
 
   return (
-    <div>
+    <div style={{ padding: "2rem" }}>
       <h1>Meals</h1>
       {error && <p style={{ color: "red" }}>{error}</p>}
-      <ul>
-        {meals.map((meal) => (
-          <li key={meal.id}>
-            <strong>{meal.title}</strong> - {meal.description} - {meal.price}৳
-          </li>
-        ))}
-      </ul>
+      {meals.map((meal) => (
+        <MealCard key={meal.id} meal={meal} />
+      ))}
     </div>
   );
-};
+}
 
 export default MealsPage;
