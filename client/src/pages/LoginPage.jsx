@@ -1,45 +1,63 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function LoginPage() {
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    const res = await fetch("http://localhost:5000/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
+    try {
+      const res = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    const data = await res.json();
-    if (res.ok) {
-      localStorage.setItem("token", data.token);
-      alert("Login successful!");
-    } else {
-      alert(data.error || "Login failed.");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Login failed");
+      } else {
+        localStorage.setItem("token", data.token);
+        navigate("/meals");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <div style={{ maxWidth: "400px", margin: "auto" }}>
       <h2>Login</h2>
-      <input name="email" placeholder="Email" onChange={handleChange} />
-      <input
-        name="password"
-        type="password"
-        placeholder="Password"
-        onChange={handleChange}
-      />
-      <button type="submit">Login</button>
-    </form>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <form onSubmit={handleSubmit}>
+        <input
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+          required
+        />
+        <button type="submit">Login</button>
+      </form>
+    </div>
   );
 }
 
