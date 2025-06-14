@@ -1,34 +1,65 @@
 // client/src/pages/MealsPage.jsx
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
 
-function MealsPage({ meals }) {
+const MealsPage = () => {
+  const [meals, setMeals] = useState([]);
+  const [newMeal, setNewMeal] = useState("");
+  const { user } = useAuth();
+
+  const fetchMeals = async () => {
+    const token = localStorage.getItem("token");
+    const res = await axios.get("http://localhost:5000/api/meals", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setMeals(res.data);
+  };
+
+  const handleAddMeal = async () => {
+    const token = localStorage.getItem("token");
+    await axios.post(
+      "http://localhost:5000/api/meals",
+      { name: newMeal },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    setNewMeal("");
+    fetchMeals(); // refresh the list
+  };
+
+  useEffect(() => {
+    fetchMeals();
+  }, []);
+
   return (
     <div>
       <h2>Meals</h2>
-      {meals.length === 0 ? (
-        <p>No meals yet.</p>
-      ) : (
-        meals.map((meal) => (
-          <div
-            key={meal.id}
-            style={{
-              border: "1px solid gray",
-              padding: "1rem",
-              margin: "1rem",
-            }}
-          >
-            <h3>{meal.title}</h3>
-            <p>{meal.description}</p>
-            <p>
-              <strong>Price:</strong> {meal.price} BDT
-            </p>
-            <p>
-              <strong>Type:</strong> {meal.type}
-            </p>
-          </div>
-        ))
+
+      {/* Show Add Meal only for provider */}
+      {user?.role === "provider" && (
+        <div>
+          <input
+            value={newMeal}
+            onChange={(e) => setNewMeal(e.target.value)}
+            placeholder="Meal name"
+          />
+          <button onClick={handleAddMeal}>Add Meal</button>
+        </div>
       )}
+
+      <ul>
+        {meals.map((meal, i) => (
+          <li key={i}>{meal.name}</li>
+        ))}
+      </ul>
     </div>
   );
-}
+};
 
 export default MealsPage;
