@@ -1,22 +1,33 @@
-import { useEffect, useState } from "react";
-import AddMealForm from "./components/AddMealForm";
+import { Routes, Route, Link } from "react-router-dom";
+import RegisterPage from "./pages/RegisterPage";
+import LoginPage from "./pages/LoginPage";
 import MealsPage from "./pages/MealsPage";
+import { useAuth } from "./contexts/AuthContext";
 
 function App() {
-  const [meals, setMeals] = useState([]);
-
-  useEffect(() => {
-    fetch("/api/meals")
-      .then((res) => res.json())
-      .then((data) => setMeals(data.meals))
-      .catch((err) => console.error("Failed to fetch meals:", err));
-  }, []);
+  const { user, logout } = useAuth();
 
   return (
-    <div style={{ textAlign: "center", marginTop: "2rem" }}>
-      <AddMealForm setMeals={setMeals} />
-      <hr style={{ margin: "2rem 0" }} />
-      <MealsPage meals={meals} />
+    <div>
+      <nav style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+        <Link to="/register">Register</Link>
+        <Link to="/login">Login</Link>
+        <Link to="/meals">Meals</Link>
+        {user && (
+          <>
+            <span>
+              Logged in as: {user.name} ({user.role})
+            </span>
+            <button onClick={logout}>Logout</button>
+          </>
+        )}
+      </nav>
+
+      <Routes>
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/meals" element={<MealsPage />} />
+      </Routes>
     </div>
   );
 }
