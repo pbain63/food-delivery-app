@@ -1,12 +1,11 @@
 // server/routes/auth.js
 const express = require("express");
-// const bcrypt = require("bcryptjs");
+const router = express.Router();
+const pool = require("../db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const pool = require("../db");
-require("dotenv").config();
 
-const router = express.Router();
+require("dotenv").config();
 
 // Register route
 router.post("/register", async (req, res) => {
