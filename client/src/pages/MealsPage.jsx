@@ -1,28 +1,32 @@
 // client/src/pages/MealsPage.jsx
-import { useEffect, useState } from "react";
-import MealCard from "../components/MealCard";
 
-function MealsPage() {
-  const [meals, setMeals] = useState([]);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    fetch("/api/meals")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load meals");
-        return res.json();
-      })
-      .then((data) => setMeals(data.meals))
-      .catch((err) => setError(err.message));
-  }, []);
-
+function MealsPage({ meals }) {
   return (
-    <div style={{ padding: "2rem" }}>
-      <h1>Meals</h1>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {meals.map((meal) => (
-        <MealCard key={meal.id} meal={meal} />
-      ))}
+    <div>
+      <h2>Meals</h2>
+      {meals.length === 0 ? (
+        <p>No meals yet.</p>
+      ) : (
+        meals.map((meal) => (
+          <div
+            key={meal.id}
+            style={{
+              border: "1px solid gray",
+              padding: "1rem",
+              margin: "1rem",
+            }}
+          >
+            <h3>{meal.title}</h3>
+            <p>{meal.description}</p>
+            <p>
+              <strong>Price:</strong> {meal.price} BDT
+            </p>
+            <p>
+              <strong>Type:</strong> {meal.type}
+            </p>
+          </div>
+        ))
+      )}
     </div>
   );
 }
