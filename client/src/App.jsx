@@ -1,14 +1,13 @@
-// client/src/App.jsx
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import MealsPage from "./pages/MealsPage";
+import AddMealForm from "./components/AddMealForm";
+import MealsPage from "./components/MealsPage";
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/meals" element={<MealsPage />} />
-      </Routes>
-    </Router>
+    <div style={{ textAlign: "center", marginTop: "2rem" }}>
+      <AddMealForm />
+      <hr style={{ margin: "2rem 0" }} />
+      <MealsPage />
+    </div>
   );
 }
 
