@@ -1,21 +1,27 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+// import axios from "axios";
 
 const MealsPage = () => {
   const [meals, setMeals] = useState([]);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchMeals = async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/api/meals");
-        setMeals(res.data.meal ? [res.data.meal] : []);
-      } catch {
-        setError("Failed to load meals");
-      }
-    };
+  const token = "your_jwt_token_here";
 
-    fetchMeals();
+  useEffect(() => {
+    fetch("/api/meals", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        setMeals(data.meals);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError("Failed to load meals");
+      });
   }, []);
 
   return (
