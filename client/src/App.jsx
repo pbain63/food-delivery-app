@@ -1,19 +1,14 @@
 // client/src/App.jsx
-import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import MealsPage from "./pages/MealsPage";
 
 function App() {
-  const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    fetch("/api")
-      .then((res) => res.text())
-      .then((data) => setMessage(data));
-  }, []);
-
   return (
-    <div style={{ textAlign: "center", marginTop: "4rem" }}>
-      <h1>{message}</h1>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/meals" element={<MealsPage />} />
+      </Routes>
+    </Router>
   );
 }
 
