@@ -10,8 +10,8 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null); // ✅ define token
-  const navigate = useNavigate(); // ✅ use navigate
+  const [token, setToken] = useState(null); //  define token
+  const navigate = useNavigate(); //  use navigate
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
