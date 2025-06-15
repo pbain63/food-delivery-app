@@ -1,48 +1,76 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-
-  const fetchProfile = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    try {
-      const res = await fetch("http://localhost:5000/api/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user); // Must match backend: `{ user: { name, role, ... } }`
-      } else {
-        setUser(null);
-      }
-    } catch (err) {
-      console.error(err);
-
-      setUser(null);
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    setUser(null);
-  };
+  const [token, setToken] = useState(null); // ✅ define token
+  const navigate = useNavigate(); // ✅ use navigate
 
   useEffect(() => {
-    fetchProfile();
+    const savedToken = localStorage.getItem("token");
+    const savedUser = localStorage.getItem("user");
+
+    if (savedToken) {
+      setToken(savedToken);
+
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        if (parsedUser) {
+          setUser(parsedUser);
+        }
+      } catch (err) {
+        console.error("Failed to parse savedUser from localStorage", err);
+        localStorage.removeItem("user"); // cleanup corrupted data
+      }
+    }
   }, []);
 
+  async function register(email, password, role, name) {
+    const res = await axios.post("http://localhost:5000/api/register", {
+      email,
+      password,
+      role,
+      name,
+    });
+
+    alert("Registration successful!");
+    navigate("/login"); // redirect to login after registration
+  }
+
+  async function login(email, password) {
+    const res = await axios.post("http://localhost:5000/api/login", {
+      email,
+      password,
+    });
+
+    const { token, user } = res.data;
+
+    setToken(token);
+    setUser(user);
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    navigate("/meals");
+  }
+
+  function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    setToken(null);
+    navigate("/login");
+  }
+
   return (
-    <AuthContext.Provider value={{ user, logout }}>
+    <AuthContext.Provider value={{ user, register, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => useContext(AuthContext);
+}
