@@ -1,64 +1,44 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { AuthContext } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-function LoginPage() {
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
-    setError("");
-
     try {
-      const res = await fetch("http://localhost:5000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Login failed");
-      } else {
-        localStorage.setItem("token", data.token);
-        navigate("/meals");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Something went wrong");
+      await login(email, password);
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+      alert("Login failed. Please check your credentials.");
     }
-  };
+  }
 
   return (
-    <div style={{ maxWidth: "400px", margin: "auto" }}>
+    <div>
       <h2>Login</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
       <form onSubmit={handleSubmit}>
         <input
-          name="email"
+          type="email"
           placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
-        />
+        /><br />
         <input
           type="password"
-          name="password"
           placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
-        />
+        /><br />
         <button type="submit">Login</button>
       </form>
     </div>
   );
 }
-
-export default LoginPage;
