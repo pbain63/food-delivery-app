@@ -1,30 +1,22 @@
-import { Routes, Route, Link } from "react-router-dom";
+// client/src/App.jsx
+import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import MealsPage from "./pages/MealsPage";
+import HomePage from "./pages/HomePage";
 import { useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-  const { user, logout } = useAuth();
+  const { user, logout } = useAuth(); // used in Navbar now
 
   return (
     <div>
-      <nav style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-        <Link to="/register">Register</Link>
-        <Link to="/login">Login</Link>
-        <Link to="/meals">Meals</Link>
-        {user && (
-          <>
-            <span>
-              Logged in as: {user.name} ({user.role})
-            </span>
-            <button onClick={logout}>Logout</button>
-          </>
-        )}
-      </nav>
+      <Navbar />
 
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
