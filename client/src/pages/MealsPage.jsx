@@ -1,46 +1,45 @@
-// client/src/pages/MealsPage.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
+import AddMealForm from "../components/AddMealForm";
 
 function MealsPage() {
+  const { user } = useAuth();
   const [meals, setMeals] = useState([]);
 
   useEffect(() => {
-    async function fetchMeals() {
-      try {
-        const token = localStorage.getItem("token");
-
-        const res = await axios.get("http://localhost:5000/api/meals", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        console.log("Meals API response:", res.data);
-
-        setMeals(res.data.meals); // Fix: Use res.data.meals (not res.data)
-      } catch (err) {
-        console.error("Failed to load meals:", err);
-      }
-    }
-
     fetchMeals();
   }, []);
 
+  const fetchMeals = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/meals");
+      setMeals(res.data.meals); //  Correct access
+    } catch (err) {
+      console.error("Error fetching meals:", err);
+    }
+  };
+
+  const handleMealAdded = (newMeal) => {
+    setMeals((prevMeals) => [newMeal, ...prevMeals]);
+  };
+
   return (
-    <div style={{ padding: "1rem" }}>
+    <div>
       <h2>All Meals</h2>
-      {meals.length === 0 ? (
-        <p>No meals available.</p>
-      ) : (
-        <ul>
-          {meals.map((meal) => (
-            <li key={meal.id}>
-              <strong>{meal.title}</strong> - {meal.description} (${meal.price})
-            </li>
-          ))}
-        </ul>
+
+      {/* Only show form if user is provider */}
+      {user?.role === "provider" && (
+        <AddMealForm onMealAdded={handleMealAdded} />
       )}
+
+      <ul>
+        {meals.map((meal) => (
+          <li key={meal.id}>
+            <strong>{meal.title}</strong> - {meal.description} - ${meal.price}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
