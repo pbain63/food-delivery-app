@@ -21,8 +21,13 @@ export function AuthProvider({ children }) {
 
     if (savedToken) {
       setToken(savedToken);
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
+      try {
+        if (savedUser && savedUser !== "undefined") {
+          setUser(JSON.parse(savedUser));
+        }
+      } catch (error) {
+        console.error("Failed to parse savedUser:", error);
+        localStorage.removeItem("user"); // clean up invalid JSON
       }
     }
   }, []);
@@ -44,27 +49,29 @@ export function AuthProvider({ children }) {
   }
 
   async function login(email, password) {
-    const res = await axios.post("http://localhost:5000/api/login", {
-      email,
-      password,
-    });
+    try {
+      const res = await axios.post("http://localhost:5000/api/login", {
+        email,
+        password,
+      });
 
-    const { token, user } = res.data;
+      console.log("Login response:", res.data); // Debug
 
-    setToken(token);
-    setUser(user);
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
+      const { token, user } = res.data;
 
-    //  Role-based redirect
-    if (user.role === "customer") {
-      navigate("/dashboard/customer");
-    } else if (user.role === "provider") {
-      navigate("/dashboard/provider");
-    } else if (user.role === "delivery") {
-      navigate("/dashboard/delivery");
-    } else {
-      navigate("/"); // fallback
+      if (!token || !user) {
+        throw new Error("Missing token or user in response");
+      }
+
+      setToken(token);
+      setUser(user);
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      navigate("/meals");
+    } catch (error) {
+      console.error("Login failed:", error);
+      alert("Login failed. Please check your credentials.");
     }
   }
 
