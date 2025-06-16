@@ -1,47 +1,68 @@
+// client/src/pages/MealsPage.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useAuth } from "../contexts/AuthContext";
-import AddMealForm from "../components/AddMealForm";
 
 function MealsPage() {
-  const { user } = useAuth();
   const [meals, setMeals] = useState([]);
+  const [filterType, setFilterType] = useState("All");
 
   useEffect(() => {
+    async function fetchMeals() {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5000/api/meals", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setMeals(res.data.meals);
+      } catch (err) {
+        console.error("Failed to fetch meals:", err);
+      }
+    }
+
     fetchMeals();
   }, []);
 
-  const fetchMeals = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/meals");
-      setMeals(res.data.meals); //  Correct access
-    } catch (err) {
-      console.error("Error fetching meals:", err);
-    }
-  };
-
-  const handleMealAdded = (newMeal) => {
-    setMeals((prevMeals) => [newMeal, ...prevMeals]);
-  };
+  const filteredMeals =
+    filterType === "All"
+      ? meals
+      : meals.filter(
+          (meal) => meal.type.toLowerCase() === filterType.toLowerCase()
+        );
 
   return (
     <div>
-      <h2>All Meals</h2>
+      <h2>Meals</h2>
 
-      {/* Only show form if user is provider */}
-      {user?.role === "provider" && (
-        <AddMealForm onMealAdded={handleMealAdded} />
+      <div style={{ marginBottom: "1rem" }}>
+        <label>Filter by type: </label>
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+        >
+          <option value="All">All</option>
+          <option value="Breakfast">Breakfast</option>
+          <option value="Lunch">Lunch</option>
+          <option value="Dinner">Dinner</option>
+        </select>
+      </div>
+
+      {filteredMeals.length === 0 ? (
+        <p>No meals available.</p>
+      ) : (
+        <ul>
+          {filteredMeals.map((meal) => (
+            <li key={meal.id}>
+              <strong>{meal.title}</strong> - {meal.description} - ${meal.price}
+              <br />
+              <small>Type: {meal.type}</small>
+              <br />
+              <small>Provided by: {meal.provider_name}</small>
+            </li>
+          ))}
+        </ul>
       )}
-
-      <ul>
-        {meals.map((meal) => (
-          <li key={meal.id}>
-            <strong>{meal.title}</strong> - {meal.description} - ${meal.price}
-            <br />
-            <small>Provided by: {meal.provider_name}</small>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
