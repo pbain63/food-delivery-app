@@ -1,5 +1,5 @@
 // client/src/App.jsx
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
@@ -8,27 +8,36 @@ import HomePage from "./pages/HomePage";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import ProviderDashboard from "./pages/ProviderDashboard";
 import DeliveryDashboard from "./pages/DeliveryDashboard";
-import { useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RedirectIfLoggedIn from "./components/RedirectIfLoggedIn";
 
 function App() {
-  const { user, logout } = useAuth();
-
   return (
-    <div>
+    <>
       <Navbar />
+
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/login" element={<LoginPage />} />
+
+        {/* ✅ Wrapped with redirect logic */}
         <Route
-          path="/meals"
+          path="/register"
           element={
-            <ProtectedRoute>
-              <MealsPage />
-            </ProtectedRoute>
+            <RedirectIfLoggedIn>
+              <RegisterPage />
+            </RedirectIfLoggedIn>
           }
         />
+        <Route
+          path="/login"
+          element={
+            <RedirectIfLoggedIn>
+              <LoginPage />
+            </RedirectIfLoggedIn>
+          }
+        />
+
+        {/* ✅ Role Dashboards */}
         <Route
           path="/dashboard/customer"
           element={
@@ -53,8 +62,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/meals"
+          element={
+            <ProtectedRoute>
+              <MealsPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
-    </div>
+    </>
   );
 }
 
