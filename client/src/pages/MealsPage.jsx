@@ -37,6 +37,8 @@ function MealsPage() {
         {meals.map((meal) => (
           <li key={meal.id}>
             <strong>{meal.title}</strong> - {meal.description} - ${meal.price}
+            <br />
+            <small>Provided by: {meal.provider_name}</small>
           </li>
         ))}
       </ul>
