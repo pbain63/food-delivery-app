@@ -1,73 +1,75 @@
 import { useState } from "react";
+import axios from "axios";
 
-function AddMealForm({ setMeals }) {
+function AddMealForm({ onMealAdded }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [type, setType] = useState("lunch");
-  const [message, setMessage] = useState("");
-
-  const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6InByb3ZpZGVyIiwiaWF0IjoxNzQ5ODg0MjY0fQ.9gdJrrLSoi1-hrfDb1srJynILs6ZX2oEuEdnqTYr0Ps"; // Replace with your actual token temporarily
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      const res = await fetch("/api/meals", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ title, description, price, type }),
-      });
+      const token = localStorage.getItem("token");
 
-      const data = await res.json();
-      if (res.ok) {
-        setMessage("Meal added successfully!");
+      const res = await axios.post(
+        "http://localhost:5000/api/meals",
+        { title, description, price, type },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-        // Add the new meal to the top of the meals list
-        setMeals((prevMeals) => [data.meal, ...prevMeals]);
+      alert("Meal added successfully!");
+      setTitle("");
+      setDescription("");
+      setPrice("");
+      setType("lunch");
 
-        setTitle("");
-        setDescription("");
-        setPrice("");
-        setType("lunch");
-      } else {
-        setMessage(data.error || "Failed to add meal.");
+      if (onMealAdded) {
+        onMealAdded(res.data.meal); // pass the new meal to parent
       }
     } catch (err) {
       console.error(err);
-      setMessage("Something went wrong.");
+      alert("Failed to add meal.");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Add a New Meal</h2>
-      {message && <p>{message}</p>}
+    <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
+      <h3>Add New Meal</h3>
       <input
+        type="text"
+        placeholder="Meal Title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Title"
         required
       />
-      <input
+      <br />
+      <textarea
+        placeholder="Meal Description"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        placeholder="Description"
         required
       />
+      <br />
       <input
+        type="number"
+        placeholder="Price (e.g. 99.00)"
         value={price}
         onChange={(e) => setPrice(e.target.value)}
-        placeholder="Price"
         required
       />
+      <br />
       <select value={type} onChange={(e) => setType(e.target.value)}>
+        <option value="breakfast">Breakfast</option>
         <option value="lunch">Lunch</option>
         <option value="dinner">Dinner</option>
       </select>
+      <br />
       <button type="submit">Add Meal</button>
     </form>
   );
