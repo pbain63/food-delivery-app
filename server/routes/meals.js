@@ -25,11 +25,14 @@ router.post("/", authenticate, async (req, res) => {
   }
 });
 
-// GET /api/meals - View all meals
+// GET /api/meals - View all meals with provider name
 router.get("/", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM meals ORDER BY created_at DESC"
+      `SELECT meals.*, users.name AS provider_name
+       FROM meals
+       JOIN users ON meals.provider_id = users.id
+       ORDER BY meals.created_at DESC`
     );
     res.json({ meals: result.rows });
   } catch (err) {
