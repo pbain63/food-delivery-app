@@ -1,9 +1,13 @@
 // src/pages/ProviderDashboard.jsx
+import { useAuth } from "../contexts/AuthContext";
+
 function ProviderDashboard() {
+  const { user } = useAuth();
+
   return (
     <div>
-      <h2>Provider Dashboard</h2>
-      <p>Welcome! Manage your meals here.</p>
+      <h1>Welcome, {user?.name}!</h1>
+      <p>This is your Provider Dashboard. Here you will manage your meals.</p>
     </div>
   );
 }
