@@ -56,10 +56,20 @@ router.post("/login", async (req, res) => {
       { id: user.id, role: user.role },
       process.env.JWT_SECRET
     );
-    res.json({ token });
+
+    // Return both token and user object (excluding password)
+    const userWithoutPassword = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
+
+    res.json({ token, user: userWithoutPassword });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: "Server error" });
   }
 });
+
 module.exports = router;
