@@ -59,4 +59,26 @@ router.get("/", authenticate, async (req, res) => {
   }
 });
 
+// PUT /api/orders/:id/deliver
+router.put("/:id/deliver", authenticate, async (req, res) => {
+  if (req.user.role !== "delivery") {
+    return res
+      .status(403)
+      .json({ error: "Only delivery personnel can mark as delivered." });
+  }
+
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      "UPDATE orders SET status = 'delivered' WHERE id = $1 RETURNING *",
+      [id]
+    );
+    res.json({ order: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update order status" });
+  }
+});
+
 module.exports = router;
