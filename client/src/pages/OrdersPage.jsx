@@ -1,68 +1,93 @@
 // client/src/pages/OrdersPage.jsx
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 
-function OrdersPage() {
-  const { user } = useAuth();
+const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { token, user } = useAuth();
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/orders", {
+        const url =
+          user.role === "provider"
+            ? "http://localhost:5000/api/orders/placed"
+            : "http://localhost:5000/api/orders";
+
+        const response = await axios.get(url, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         });
-        setOrders(res.data.orders);
-      } catch (err) {
-        console.error("Failed to fetch orders:", err);
-      } finally {
-        setLoading(false);
+
+        setOrders(response.data.orders);
+      } catch (error) {
+        console.error("Failed to fetch orders:", error);
       }
     };
 
-    fetchOrders();
-  }, []);
+    if (token && user) {
+      fetchOrders();
+    }
+  }, [token, user]);
 
-  if (loading) return <p>Loading orders...</p>;
+  const markAsPlaced = async (orderId) => {
+    try {
+      const response = await axios.patch(
+        `http://localhost:5000/api/orders/${orderId}/place`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Update UI
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === orderId ? response.data.order : order
+        )
+      );
+    } catch (error) {
+      console.error("Failed to mark order as placed:", error);
+    }
+  };
 
   return (
     <div>
-      <h2>Your Orders</h2>
+      <h2 className="text-xl font-bold mb-4">Your Orders</h2>
       {orders.length === 0 ? (
         <p>No orders found.</p>
       ) : (
-        <ul>
+        <ul className="space-y-4">
           {orders.map((order) => (
-            <li key={order.id}>
-              {user.role === "customer" ? (
-                <>
-                  <strong>{order.title}</strong> ({order.type}) –{" "}
-                  {order.quantity}x @ ${order.price} <br />
-                  <small>{order.description}</small> <br />
-                  <em>
-                    Ordered on: {new Date(order.created_at).toLocaleString()}
-                  </em>
-                </>
-              ) : (
-                <>
-                  <strong>{order.title}</strong> – {order.quantity}x ordered by{" "}
-                  <strong>{order.customer_name}</strong> <br />
-                  <em>
-                    Ordered on: {new Date(order.created_at).toLocaleString()}
-                  </em>
-                </>
+            <li
+              key={order.id}
+              className="border p-4 rounded-lg shadow-md flex justify-between items-center"
+            >
+              <div>
+                <p>Order ID: {order.id}</p>
+                <p>Meal ID: {order.meal_id}</p>
+                <p>Quantity: {order.quantity}</p>
+                <p>Status: {order.status}</p>
+              </div>
+
+              {user.role === "provider" && order.status === "pending" && (
+                <button
+                  onClick={() => markAsPlaced(order.id)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Mark as Placed
+                </button>
               )}
-              <hr />
             </li>
           ))}
         </ul>
       )}
     </div>
   );
-}
+};
 
 export default OrdersPage;
