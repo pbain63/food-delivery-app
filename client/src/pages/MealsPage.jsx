@@ -1,10 +1,20 @@
 // client/src/pages/MealsPage.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
 
 function MealsPage() {
   const [meals, setMeals] = useState([]);
   const [filterType, setFilterType] = useState("All");
+
+  const { user } = useAuth(); // to check if user is provider
+
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    price: "",
+    type: "Lunch",
+  });
 
   useEffect(() => {
     async function fetchMeals() {
@@ -31,6 +41,28 @@ function MealsPage() {
           (meal) => meal.type.toLowerCase() === filterType.toLowerCase()
         );
 
+  async function handleAddMeal(e) {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        "http://localhost:5000/api/meals",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      alert("Meal added!");
+      setMeals([res.data.meal, ...meals]); // prepend new meal
+      setFormData({ title: "", description: "", price: "", type: "Lunch" }); // reset form
+    } catch (err) {
+      console.error("Failed to add meal:", err);
+      alert("Failed to add meal.");
+    }
+  }
+
   return (
     <div>
       <h2>Meals</h2>
@@ -47,6 +79,51 @@ function MealsPage() {
           <option value="Dinner">Dinner</option>
         </select>
       </div>
+
+      {user?.role === "provider" && (
+        <form onSubmit={handleAddMeal} style={{ marginBottom: "2rem" }}>
+          <h3>Add New Meal</h3>
+          <input
+            type="text"
+            placeholder="Title"
+            value={formData.title}
+            onChange={(e) =>
+              setFormData({ ...formData, title: e.target.value })
+            }
+            required
+          />
+          <br />
+          <textarea
+            placeholder="Description"
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            required
+          ></textarea>
+          <br />
+          <input
+            type="number"
+            placeholder="Price"
+            value={formData.price}
+            onChange={(e) =>
+              setFormData({ ...formData, price: e.target.value })
+            }
+            required
+          />
+          <br />
+          <select
+            value={formData.type}
+            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+          >
+            <option value="Breakfast">Breakfast</option>
+            <option value="Lunch">Lunch</option>
+            <option value="Dinner">Dinner</option>
+          </select>
+          <br />
+          <button type="submit">Add Meal</button>
+        </form>
+      )}
 
       {filteredMeals.length === 0 ? (
         <p>No meals available.</p>
