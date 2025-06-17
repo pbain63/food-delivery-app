@@ -5,7 +5,8 @@ const authenticate = require("../middleware/authenticate");
 
 // POST /api/meals - Provider adds a meal
 router.post("/", authenticate, async (req, res) => {
-  const { title, description, price, type } = req.body;
+  const { title, description, price } = req.body;
+  const type = req.body.type.toLowerCase(); //  FIX
   const providerId = req.user.id;
 
   if (req.user.role !== "provider") {
