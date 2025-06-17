@@ -82,8 +82,12 @@ export function AuthProvider({ children }) {
     navigate("/");
   }
 
+  const isAuthenticated = !!user;
+
   return (
-    <AuthContext.Provider value={{ user, register, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, isAuthenticated, register, login, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );
