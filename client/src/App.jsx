@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage";
 import MealsPage from "./pages/MealsPage";
 import OrdersPage from "./pages/OrdersPage";
 import HomePage from "./pages/HomePage";
+import DeliveryPage from "./pages/DeliveryPage";
 import { useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -32,6 +33,14 @@ function App() {
           element={
             <ProtectedRoute>
               <OrdersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/delivery"
+          element={
+            <ProtectedRoute>
+              <DeliveryPage />
             </ProtectedRoute>
           }
         />
