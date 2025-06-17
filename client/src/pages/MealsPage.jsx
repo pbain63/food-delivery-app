@@ -5,141 +5,105 @@ import { useAuth } from "../contexts/AuthContext";
 
 function MealsPage() {
   const [meals, setMeals] = useState([]);
-  const [filterType, setFilterType] = useState("All");
-
-  const { user } = useAuth(); // to check if user is provider
-
-  const [formData, setFormData] = useState({
+  const [newMeal, setNewMeal] = useState({
     title: "",
     description: "",
     price: "",
-    type: "Lunch",
+    type: "breakfast",
   });
+  const { user } = useAuth();
 
   useEffect(() => {
     async function fetchMeals() {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/meals", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setMeals(res.data.meals);
-      } catch (err) {
-        console.error("Failed to fetch meals:", err);
-      }
+      const res = await axios.get("http://localhost:5000/api/meals");
+      setMeals(res.data.meals);
     }
 
     fetchMeals();
   }, []);
 
-  const filteredMeals =
-    filterType === "All"
-      ? meals
-      : meals.filter(
-          (meal) => meal.type.toLowerCase() === filterType.toLowerCase()
-        );
-
-  async function handleAddMeal(e) {
+  const handleAddMeal = async (e) => {
     e.preventDefault();
+
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post(
-        "http://localhost:5000/api/meals",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      alert("Meal added!");
-      setMeals([res.data.meal, ...meals]); // prepend new meal
-      setFormData({ title: "", description: "", price: "", type: "Lunch" }); // reset form
+      const res = await axios.post("http://localhost:5000/api/meals", newMeal, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setMeals([res.data.meal, ...meals]);
+      setNewMeal({ title: "", description: "", price: "", type: "breakfast" });
     } catch (err) {
       console.error("Failed to add meal:", err);
-      alert("Failed to add meal.");
+      alert("Failed to add meal");
     }
-  }
+  };
+
+  const handleOrder = async (mealId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        "http://localhost:5000/api/orders",
+        { meal_id: mealId, quantity: 1 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("Order placed successfully!");
+    } catch (err) {
+      console.error("Failed to place order:", err);
+      alert("Failed to place order");
+    }
+  };
 
   return (
     <div>
       <h2>Meals</h2>
 
-      <div style={{ marginBottom: "1rem" }}>
-        <label>Filter by type: </label>
-        <select
-          value={filterType}
-          onChange={(e) => setFilterType(e.target.value)}
-        >
-          <option value="All">All</option>
-          <option value="Breakfast">Breakfast</option>
-          <option value="Lunch">Lunch</option>
-          <option value="Dinner">Dinner</option>
-        </select>
-      </div>
-
       {user?.role === "provider" && (
-        <form onSubmit={handleAddMeal} style={{ marginBottom: "2rem" }}>
-          <h3>Add New Meal</h3>
+        <form onSubmit={handleAddMeal}>
+          <h3>Add a Meal</h3>
           <input
-            type="text"
             placeholder="Title"
-            value={formData.title}
-            onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
-            }
-            required
+            value={newMeal.title}
+            onChange={(e) => setNewMeal({ ...newMeal, title: e.target.value })}
           />
-          <br />
-          <textarea
-            placeholder="Description"
-            value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
-            required
-          ></textarea>
-          <br />
           <input
-            type="number"
-            placeholder="Price"
-            value={formData.price}
+            placeholder="Description"
+            value={newMeal.description}
             onChange={(e) =>
-              setFormData({ ...formData, price: e.target.value })
+              setNewMeal({ ...newMeal, description: e.target.value })
             }
-            required
           />
-          <br />
+          <input
+            placeholder="Price"
+            type="number"
+            value={newMeal.price}
+            onChange={(e) => setNewMeal({ ...newMeal, price: e.target.value })}
+          />
           <select
-            value={formData.type}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+            value={newMeal.type}
+            onChange={(e) => setNewMeal({ ...newMeal, type: e.target.value })}
           >
-            <option value="Breakfast">Breakfast</option>
-            <option value="Lunch">Lunch</option>
-            <option value="Dinner">Dinner</option>
+            <option value="breakfast">Breakfast</option>
+            <option value="lunch">Lunch</option>
+            <option value="dinner">Dinner</option>
           </select>
-          <br />
           <button type="submit">Add Meal</button>
         </form>
       )}
 
-      {filteredMeals.length === 0 ? (
-        <p>No meals available.</p>
-      ) : (
-        <ul>
-          {filteredMeals.map((meal) => (
-            <li key={meal.id}>
-              <strong>{meal.title}</strong> - {meal.description} - ${meal.price}
-              <br />
-              <small>Type: {meal.type}</small>
-              <br />
-              <small>Provided by: {meal.provider_name}</small>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul>
+        {meals.map((meal) => (
+          <li key={meal.id} style={{ marginBottom: "1rem" }}>
+            <strong>{meal.title}</strong> - {meal.description} - ${meal.price} (
+            {meal.type})
+            {user?.role === "customer" && (
+              <div>
+                <button onClick={() => handleOrder(meal.id)}>Order</button>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
