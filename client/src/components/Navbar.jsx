@@ -24,6 +24,9 @@ function Navbar() {
           <button onClick={logout}>Logout</button>
         </>
       )}
+      {user?.role === "delivery" && (
+        <Link to="/delivery">Delivery Dashboard</Link>
+      )}
     </nav>
   );
 }
