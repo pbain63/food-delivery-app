@@ -13,7 +13,7 @@ app.use(express.json());
 app.use("/api", authRoutes);  // "/api/auth"
 app.use("/api", protectedRoutes);
 app.use("/api/meals", mealsRoutes);
-app.use("/api/orders", orderRoutes);
+app.use("/api/orders", orderRoutes);  
 
 app.get("/api", (req, res) => {
   res.send("API is running!");
