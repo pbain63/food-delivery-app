@@ -15,7 +15,7 @@ router.post("/", authenticate, async (req, res) => {
 
   try {
     const result = await pool.query(
-      "INSERT INTO orders (customer_id, meal_id, quantity) VALUES ($1, $2, $3) RETURNING *",
+      "INSERT INTO orders (customer_id, meal_id, quantity, status) VALUES ($1, $2, $3, 'placed') RETURNING *",
       [customerId, meal_id, quantity || 1]
     );
 
@@ -25,28 +25,16 @@ router.post("/", authenticate, async (req, res) => {
     res.status(500).json({ error: "Failed to place order" });
   }
 });
-// GET /api/orders/placed - Delivery sees all placed orders
-router.get("/placed", authenticate, async (req, res) => {
-  if (req.user.role !== "delivery") {
-    return res
-      .status(403)
-      .json({ error: "Only delivery personnel can view placed orders." });
-  }
 
+router.get("/placed", authenticate, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT orders.*, users.name AS customer_name, meals.title AS meal_title 
-       FROM orders 
-       JOIN users ON orders.customer_id = users.id 
-       JOIN meals ON orders.meal_id = meals.id 
-       WHERE orders.status = 'placed'
-       ORDER BY orders.created_at DESC`
+      "SELECT * FROM orders WHERE status = 'placed' ORDER BY created_at DESC"
     );
-
     res.json({ orders: result.rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to fetch placed orders." });
+    res.status(500).json({ error: "Failed to fetch placed orders" });
   }
 });
 
