@@ -50,4 +50,36 @@ router.get("/placed", authenticate, async (req, res) => {
   }
 });
 
+// PATCH /api/orders/:id/deliver - Delivery marks an order as delivered
+router.patch("/:id/deliver", authenticate, async (req, res) => {
+  if (req.user.role !== "delivery") {
+    return res
+      .status(403)
+      .json({ error: "Only delivery personnel can update delivery status." });
+  }
+
+  const orderId = req.params.id;
+
+  try {
+    const result = await pool.query(
+      `UPDATE orders
+       SET status = 'delivered'
+       WHERE id = $1 AND status = 'placed'
+       RETURNING *`,
+      [orderId]
+    );
+
+    if (result.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "Order not found or already delivered." });
+    }
+
+    res.json({ message: "Order marked as delivered", order: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update order status." });
+  }
+});
+
 module.exports = router;
