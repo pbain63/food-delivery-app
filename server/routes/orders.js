@@ -4,65 +4,25 @@ const router = express.Router();
 const pool = require("../db");
 const authenticate = require("../middleware/authenticate");
 
-// Existing routes...
+// POST /api/orders - customer places an order
+router.post("/", authenticate, async (req, res) => {
+  const { meal_id, quantity } = req.body;
+  const customerId = req.user.id;
 
-// GET /api/orders/placed - for delivery users
-router.get("/placed", authenticate, async (req, res) => {
-  if (req.user.role !== "delivery") {
-    return res.status(403).json({ error: "Access denied" });
+  if (req.user.role !== "customer") {
+    return res.status(403).json({ error: "Only customers can place orders." });
   }
 
   try {
     const result = await pool.query(
-      `SELECT orders.*, meals.title AS meal_title, users.name AS customer_name
-       FROM orders
-       JOIN meals ON orders.meal_id = meals.id
-       JOIN users ON orders.customer_id = users.id
-       WHERE status = 'placed'
-       ORDER BY created_at DESC`
+      "INSERT INTO orders (customer_id, meal_id, quantity) VALUES ($1, $2, $3) RETURNING *",
+      [customerId, meal_id, quantity || 1]
     );
 
-    res.json({ orders: result.rows });
+    res.status(201).json({ order: result.rows[0] });
   } catch (err) {
-    console.error("Error fetching placed orders:", err);
-    res.status(500).json({ error: "Failed to fetch placed orders" });
-  }
-});
-// PATCH /api/orders/:id/place - Provider marks order as placed
-router.patch("/:id/place", authenticate, async (req, res) => {
-  const orderId = req.params.id;
-
-  if (req.user.role !== "provider") {
-    return res.status(403).json({ error: "Only providers can update orders." });
-  }
-
-  try {
-    // Check if order exists and is "pending"
-    const existing = await pool.query("SELECT * FROM orders WHERE id = $1", [
-      orderId,
-    ]);
-    const order = existing.rows[0];
-
-    if (!order) {
-      return res.status(404).json({ error: "Order not found." });
-    }
-
-    if (order.status !== "pending") {
-      return res
-        .status(400)
-        .json({ error: "Only pending orders can be marked as placed." });
-    }
-
-    // Update status to "placed"
-    const result = await pool.query(
-      "UPDATE orders SET status = 'placed' WHERE id = $1 RETURNING *",
-      [orderId]
-    );
-
-    res.json({ order: result.rows[0] });
-  } catch (err) {
-    console.error("Failed to update order:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error("Failed to place order:", err);
+    res.status(500).json({ error: "Failed to place order" });
   }
 });
 
