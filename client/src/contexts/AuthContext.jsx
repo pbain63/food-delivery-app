@@ -13,6 +13,7 @@ export function useAuth() {
 //  Provider component
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // NEW
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,9 +28,11 @@ export function AuthProvider({ children }) {
         }
       } catch (error) {
         console.error("Failed to parse savedUser:", error);
-        localStorage.removeItem("user"); // clean up invalid JSON
+        localStorage.removeItem("user");
       }
     }
+
+    setLoading(false); // NEW: done restoring auth state
   }, []);
 
   function setToken(token) {
@@ -86,7 +89,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated, register, login, logout }}
+      value={{ user, isAuthenticated, register, login, logout, loading }}
     >
       {children}
     </AuthContext.Provider>
